@@ -23,5 +23,12 @@ test : 복합적인 요소가 들어있음 (차량+건너는 중+야간 등..)
 (자세한 계획은 결과보고서 초안 참고)
 -----
 
-## 2026-05-23
-- 
+## 2026-05-26
+- 흰색 횡단보도 여러 환경에서 테스트 결과
+역시 운전자시점은 인식 못하지만 그외엔 정확도 높음.
+
+- 영상 데이터를 videos 폴더에 저장했으며, 데이터 학습을 위해 이미지로 변환. (변환 이미지는 frames폴더에 있으며, extract_frames.ipynb코드를 사용)
+- 이 이미지는 이후 라벨링 작업이 필요.
+selected_frames - 많이 중복되거나 횡단보도가 없는 이미지는 삭제, white와 yellow 폴더에 각각 정리할 예정 (아직 다 못함)
+라벨링은 roboflow 사용. (초대 완료시 링크 제거해주세요)
+https://app.roboflow.com/join/eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ3b3Jrc3BhY2VJZCI6InQySXdhcU1jaDVlQW5HVUpDVVFseVVHcnNNWDIiLCJyb2xlIjoib3duZXIiLCJpbnZpdGVyIjoiamphbmcyeWF5bzNAZ21haWwuY29tIiwiaWF0IjoxNzc5NzcyMjkwfQ.9-nDlUV1K4eA7lXN_xMsrlHER8bwuBxp8897RHHfGww
