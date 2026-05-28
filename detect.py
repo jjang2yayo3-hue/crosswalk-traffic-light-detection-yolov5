@@ -48,7 +48,7 @@ from utils.torch_utils import select_device, time_sync
 
 
 @torch.no_grad()
-def run(.weights=ROOT / 'yolov5spt',  # model.pt path(s)
+def run(weights=ROOT / 'yolov5spt',  # model.pt path(s)
         source=ROOT / 'data/images',  # file/dir/URL/glob, 0 for webcam
         data=ROOT / 'data/coco128.yaml',  # dataset.yaml path
         imgsz=(640, 640),  # inference size (height, width)

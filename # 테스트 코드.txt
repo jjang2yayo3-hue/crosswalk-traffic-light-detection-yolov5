@@ -1,0 +1,28 @@
+#python은 10 또는 11버전이 안정하다고 해서 11로 받아둔 상태입니다
+
+#다음 코드는 'anaconda terminal'에서 입력.
+#VS Code 터미널에서도 시도해보려했으나 안됩니다(...)
+개발환경 새로 만든 후 다음 코드 입력(환경 명 통일을 추천):
+pip install -r requirements.txt
+
+
+터미널로 실행시 다음 코드 작성 (project는 개발환경 명)
+conda activate project
+
+cd C:\project\crosswalk-traffic-light-detection-yolov5
+#이건 횡단보도감지 프로젝트 파일 명을 의미함
+
+
+
+///////////////////////////////////////////테스트 코드
+python detect.py --weights runs/train/exp4/weights/best.pt --source videos/test1.mp4
+
+///////////////////////////테스트 영상 파일 확인은 여기
+runs/detect/exp
+
+///////////////////////////////////////VScode 터미널에서 자주 쓸 명령어
+학습 시
+python train.py --img 640 --batch 16 --epochs 50 --data data.yaml --weights yolov5s.pt
+
+테스트 시
+python detect.py --weights best.pt --source test.mp4
