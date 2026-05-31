@@ -1,0 +1,12 @@
+train: train/images
+val: train/images
+
+nc: 1
+names: ['yellow-crosswalk']
+
+roboflow:
+  workspace: jangjiyoungs-workspace
+  project: yellow_crosswalk
+  version: 1
+  license: Public Domain
+  url: https://universe.roboflow.com/jangjiyoungs-workspace/yellow_crosswalk/dataset/1

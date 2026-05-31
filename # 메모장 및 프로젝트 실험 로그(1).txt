@@ -32,3 +32,7 @@ test : 복합적인 요소가 들어있음 (차량+건너는 중+야간 등..)
 selected_frames - 많이 중복되거나 횡단보도가 없는 이미지는 삭제, white와 yellow 폴더에 각각 정리할 예정 (아직 다 못함)
 라벨링은 roboflow 사용. (초대 완료시 링크 제거해주세요)
 https://app.roboflow.com/join/eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ3b3Jrc3BhY2VJZCI6InQySXdhcU1jaDVlQW5HVUpDVVFseVVHcnNNWDIiLCJyb2xlIjoib3duZXIiLCJpbnZpdGVyIjoiamphbmcyeWF5bzNAZ21haWwuY29tIiwiaWF0IjoxNzc5NzcyMjkwfQ.9-nDlUV1K4eA7lXN_xMsrlHER8bwuBxp8897RHHfGww
+
+## 2026-05-31
+- 22개 이미지를 대상으로 roboflow 라벨링 및 학습 테스트 해봤습니다
+학습을 돌려본 건 아니고(아직 22장이라 무의미) 어느정도 환경만 맞췄습니다
