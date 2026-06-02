@@ -1,8 +1,8 @@
 
-yellow_crosswalk - v1 2026-05-31 11:09pm
+yellow_crosswalk - v2 2026-06-02 8:26pm
 ==============================
 
-This dataset was exported via roboflow.com on May 31, 2026 at 2:11 PM GMT
+This dataset was exported via roboflow.com on June 2, 2026 at 11:30 AM GMT
 
 Roboflow is an end-to-end computer vision platform that helps you
 * collaborate with your team on computer vision projects
@@ -17,7 +17,7 @@ visit https://github.com/roboflow/notebooks
 
 To find over 100k other datasets and pre-trained models, visit https://universe.roboflow.com
 
-The dataset includes 22 images.
+The dataset includes 186 images.
 Yellow-crosswalk are annotated in YOLO v5 PyTorch format.
 
 The following pre-processing was applied to each image:

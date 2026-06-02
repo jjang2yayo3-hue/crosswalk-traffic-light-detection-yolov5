@@ -1,5 +1,9 @@
-train: train/images
-val: train/images
+train: C:/project/crosswalk-traffic-light-detection-yolov5/yellow_crosswalk.v1i.yolov5pytorch/train/images
+val: C:/project/crosswalk-traffic-light-detection-yolov5/yellow_crosswalk.v1i.yolov5pytorch/valid/images
+test: C:/project/crosswalk-traffic-light-detection-yolov5/yellow_crosswalk.v1i.yolov5pytorch/test/images
+
+nc: 1
+names: ['yellow-crosswalk']
 
 nc: 1
 names: ['yellow-crosswalk']
@@ -7,6 +11,6 @@ names: ['yellow-crosswalk']
 roboflow:
   workspace: jangjiyoungs-workspace
   project: yellow_crosswalk
-  version: 1
+  version: 2
   license: Public Domain
-  url: https://universe.roboflow.com/jangjiyoungs-workspace/yellow_crosswalk/dataset/1
+  url: https://universe.roboflow.com/jangjiyoungs-workspace/yellow_crosswalk/dataset/2

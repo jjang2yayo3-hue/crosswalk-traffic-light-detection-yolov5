@@ -1,4 +1,4 @@
-# yellow_crosswalk > 2026-05-31 11:09pm
+# yellow_crosswalk > 2026-06-02 8:26pm
 https://universe.roboflow.com/jangjiyoungs-workspace/yellow_crosswalk
 
 Provided by a Roboflow user

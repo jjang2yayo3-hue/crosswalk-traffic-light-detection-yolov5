@@ -6,33 +6,43 @@
 ##최신코드 다운 시 pull origin 눌러 받기
 
 ## 2026-05-22
-- github desktop 기능 테스트
-- 데이터 영상 및 결과보고서 초안 업로드
-영상 분류 기준:
+- 영상 분류
+기준:
 test : 복합적인 요소가 들어있음 (차량+건너는 중+야간 등..)
 0번은 횡단보도는 아니지만 테스트가 필요할 가능성에 대비하여 추가.
 1~9번은 노란색, 10~번은 흰색 횡단보도로 나눌 예정 (수정 가능)
 그 외는 파일명으로 어떤 상황인지 간략히 나타냄.
 
 ## 계획
-- 기존 모델 테스트 수행
-노란색 횡단보도 confidence 수치 확인
-일반 흰색 횡단보도는 정상 탐지 잘 하는지
-- 노란색에 대한 새로운 데이터 학습 필요
-- augmentation 적용 예정
-(자세한 계획은 결과보고서 초안 참고)
+- 노란색 횡단보도 confidence 수치 비교는 다음 3단계를 거침
+기존 모델/ 데이터 추가 모델 / augmentation 모델
+각 모델은 코드를 바꾸면서 원하는 모델을 골라 테스트할 수 있음.
+이거랑 정량평가 코드를 이용해 성능 측정 및 수치 비교할 계획.
+(Precision Recall mAP@0.5 mAP@0.5:0.95)
 -----
 
 ## 2026-05-26
-- 흰색 횡단보도 여러 환경에서 테스트 결과
-역시 운전자시점은 인식 못하지만 그외엔 정확도 높음.
-
-- 영상 데이터를 videos 폴더에 저장했으며, 데이터 학습을 위해 이미지로 변환. (변환 이미지는 frames폴더에 있으며, extract_frames.ipynb코드를 사용)
+- 영상 데이터를 videos 폴더에 저장했으며, 데이터 학습을 위해 이미지로 변환. (변환 이미지는 frames폴더에 있으며, extract_frames.ipynb의 코드를 사용)
 - 이 이미지는 이후 라벨링 작업이 필요.
-selected_frames - 많이 중복되거나 횡단보도가 없는 이미지는 삭제, white와 yellow 폴더에 각각 정리할 예정 (아직 다 못함)
-라벨링은 roboflow 사용. (초대 완료시 링크 제거해주세요)
-https://app.roboflow.com/join/eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ3b3Jrc3BhY2VJZCI6InQySXdhcU1jaDVlQW5HVUpDVVFseVVHcnNNWDIiLCJyb2xlIjoib3duZXIiLCJpbnZpdGVyIjoiamphbmcyeWF5bzNAZ21haWwuY29tIiwiaWF0IjoxNzc5NzcyMjkwfQ.9-nDlUV1K4eA7lXN_xMsrlHER8bwuBxp8897RHHfGww
+selected_frames - 무의미한 이미지는 삭제한 후, white와 yellow 폴더에 각각 정리하여 라벨링할 예정. 라벨링은 roboflow 사용. 
 
 ## 2026-05-31
 - 22개 이미지를 대상으로 roboflow 라벨링 및 학습 테스트 해봤습니다
-학습을 돌려본 건 아니고(아직 22장이라 무의미) 어느정도 환경만 맞췄습니다
+
+## 2026-06-02
+- exp10: 실험 1: Yellow Crosswalk Dataset 구축 및 단독 학습
+186개 이미지 라벨링 및 데이터 학습
+python train.py --img 640 --batch 4 --epochs 50 --data yellow_crosswalk.v1i.yolov5pytorch\data.yaml --weights yolov5s.pt
+결과 영상 : runs\detect\exp5 그리고 exp6
+
+##계획
+일단 augmentation 모델도 따로 만들거고, 거기서 성능을 올려보겠습니다.
+
+*발견한 문제점: 기존 횡단보도 dataset이 없어서 모델을 합치진 못하고, 대신 detect 결과를 합쳐서 조건부로 판단을 처리해야 할 것으로 보입니다.
+예시 코드)
+cross_model = exp4
+yellow_model = exp10
+
+if Zebra_Cross or Yellow_Cross:
+    crosswalk = True
+
