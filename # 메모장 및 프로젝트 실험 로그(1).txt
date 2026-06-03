@@ -1,7 +1,7 @@
 # 메모장 및 프로젝트 실험 로그
-# 이곳 분량이 방대할 경우 새로운 파일에 작성 또는 내용 일부 삭제
+# 이후 작업은 새 메모장에 작성 부탁드립니다!
 
-##작업 완료 시 GitHub Desktop- commit- push origin
+##작업 완료 시 GitHub Desktop- commit- "push origin" 까지 해야 함/
 (summary에 간단히 작업 요약 ex) add yellow dataset 후 commit 누르면 됨)
 ##최신코드 다운 시 pull origin 눌러 받기
 
@@ -19,7 +19,7 @@ test : 복합적인 요소가 들어있음 (차량+건너는 중+야간 등..)
 각 모델은 코드를 바꾸면서 원하는 모델을 골라 테스트할 수 있음.
 이거랑 정량평가 코드를 이용해 성능 측정 및 수치 비교할 계획.
 (Precision Recall mAP@0.5 mAP@0.5:0.95)
------
+----------------------------------------------------------
 
 ## 2026-05-26
 - 영상 데이터를 videos 폴더에 저장했으며, 데이터 학습을 위해 이미지로 변환. (변환 이미지는 frames폴더에 있으며, extract_frames.ipynb의 코드를 사용)
@@ -35,10 +35,13 @@ selected_frames - 무의미한 이미지는 삭제한 후, white와 yellow 폴�
 python train.py --img 640 --batch 4 --epochs 50 --data yellow_crosswalk.v1i.yolov5pytorch\data.yaml --weights yolov5s.pt
 결과 영상 : runs\detect\exp5 그리고 exp6
 
-##계획
-일단 augmentation 모델도 따로 만들거고, 거기서 성능을 올려보겠습니다.
+## 2026-06-03
+- augment 사항: Flip(Horizontal), Rotation(+-15degree), Brightness(+-15%), Exposure(+-10%)
+- 노란 횡단보도 + augmentation 558장 모델
+exp11로 저장됨. 테스트는 아직.
 
-*발견한 문제점: 기존 횡단보도 dataset이 없어서 모델을 합치진 못하고, 대신 detect 결과를 합쳐서 조건부로 판단을 처리해야 할 것으로 보입니다.
+
+* 이후 계획에서 발견한 문제점: 기존 흰색 횡단보도의 dataset을 구할 수 없어서 모델을 합치진 못하고, 대신 detect 결과를 합쳐서 조건부로 판단을 처리해야 할 것으로 보입니다.
 예시 코드)
 cross_model = exp4
 yellow_model = exp10
