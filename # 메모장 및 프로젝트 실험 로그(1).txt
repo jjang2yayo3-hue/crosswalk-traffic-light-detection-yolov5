@@ -37,8 +37,15 @@ python train.py --img 640 --batch 4 --epochs 50 --data yellow_crosswalk.v1i.yolo
 
 ## 2026-06-03
 - augment 사항: Flip(Horizontal), Rotation(+-15degree), Brightness(+-15%), Exposure(+-10%)
-- 노란 횡단보도 + augmentation 558장 모델
-exp11로 저장됨. 테스트는 아직.
+- 노란 횡단보도 + augmentation 558장 모델: exp11로 저장
+
+## 2026-06-04
+- 테스트 진행. exp7 및 8 참고
+수치가 0.2~0.8으로 편차가 큰 것으로 보이는데 데이터 부족으로 인한 현상으로 판단됩니다. 박스 자체는 잘 잡으니까 임계값을 조정해야겠습니다.
+예시) if conf > 0.3:
+    crosswalk_detected = True
+이후 데이터 학습이 더 필요해 보인다면 말씀해주세요.
+역할은 학습 파트와 판단 파트로 나누면 될 것 같습니다 (적절히 공동수행)
 
 
 * 이후 계획에서 발견한 문제점: 기존 흰색 횡단보도의 dataset을 구할 수 없어서 모델을 합치진 못하고, 대신 detect 결과를 합쳐서 조건부로 판단을 처리해야 할 것으로 보입니다.

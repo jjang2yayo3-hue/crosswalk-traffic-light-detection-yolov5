@@ -17,7 +17,8 @@ cd yellow_crosswalk.v2i.yolov5pytorch
 code .
 
 ///////////////////////////////////////////테스트 코드
-python detect.py --weights runs/train/exp4/weights/best.pt --source videos/test1.mp4
+exp4= 기존 모델, 10=추가모델, 11=augment 모델
+python detect.py --weights runs/train/exp11/weights/best.pt --source videos/test1.mp4
 
 ///////////////////////////테스트 영상 파일 확인은 여기
 runs/detect/exp
