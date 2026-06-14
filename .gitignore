@@ -254,3 +254,11 @@ com_crashlytics_export_strings.xml
 crashlytics.properties
 crashlytics-build.properties
 fabric.properties
+
+!runs/
+!runs/train/
+!runs/train/exp10/**
+!runs/train/exp11/**
+
+!yellow_crosswalk.v1i.yolov5pytorch/**
+!yellow_crosswalk.v2i.yolov5pytorch/**
