@@ -5,16 +5,18 @@
 pip install -r requirements.txt
 
 
-터미널로 실행시 다음 코드 작성 (project는 개발환경 명)
-conda activate project
-
 ##자주 쓰는 파일명으로 이동
 cd C:\project\crosswalk-traffic-light-detection-yolov5
 
-cd yellow_crosswalk.v2i.yolov5pytorch
-
 ##이건 VScode open용
 code .
+
+///////////////////// COCO+ ByteTrack (영상 수정시 직접 파일 들어가 수정)
+python tracking.py
+
+python coco_bytetrack.py
+
+python integrated_pipeline.py
 
 ///////////////////////////////////////////테스트 코드
 exp4= 기존 모델, 10=추가모델, 11=augment 모델
@@ -26,7 +28,9 @@ runs/detect/exp
 ///////////////////////////////////////PowerShell 테스트 코드
 python detect.py --weights runs/train/exp10/weights/best.pt --source "C:\project\crosswalk-traffic-light-detection-yolov5\videos\test2.mp4"
 
-python detect.py --weights runs/train/exp10/weights/best.pt --source "C:\project\crosswalk-traffic-light-detection-yolov5\videos\yellow_crossing_1.mp4"
+python detect.py --weights runs/train/exp124/weights/best.pt --source "C:\project\crosswalk-traffic-light-detection-yolov5\videos\yellow_moving_car_3.mp4"
 
 ///////학습 코드
 python train.py --img 640 --batch 4 --epochs 50 --data yellow_crosswalk.v2i.yolov5pytorch\data.yaml --weights runs\train\exp10\weights\best.pt
+
+python train.py --img 640 --batch 16 --epochs 10 --data yellow_crosswalk.v4i.yolov5pytorch\data.yaml --weights runs\train\exp11\weights\best.pt --name exp12
