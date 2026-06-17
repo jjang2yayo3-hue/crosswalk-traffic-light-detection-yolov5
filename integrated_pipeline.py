@@ -53,8 +53,14 @@ PERSON_MIN_FRAMES = 1
 crosswalk_history = deque(maxlen=HISTORY_LEN)
 red_history = deque(maxlen=HISTORY_LEN)
 green_history = deque(maxlen=HISTORY_LEN)
-car_history = deque(maxlen=HISTORY_LEN)
+moving_car_history = deque(maxlen=HISTORY_LEN)
+stopped_car_history = deque(maxlen=HISTORY_LEN)
 person_history = deque(maxlen=HISTORY_LEN)
+
+# vehicle speed tracking
+vehicle_track_history = {}
+VEHICLE_HISTORY_LEN = 5
+MOVING_SPEED_THRESHOLD = 5.0  # pixel/frame
 
 current_status = "WAITING"
 current_risk_score = 0
@@ -97,7 +103,6 @@ def bbox_iou(box1, box2):
 
     if union == 0:
         return 0.0
-
     return inter / union
 
 
@@ -119,38 +124,64 @@ def is_crosswalk_sufficient(box, frame_shape):
     x1, y1, x2, y2 = box
 
     box_h = y2 - y1
-
     enough_height = box_h > h * 0.15
     enough_position = y2 > h * 0.45
 
     return enough_height or enough_position
 
 
-def calculate_risk(red_stable, green_stable, car_on_crosswalk, approaching_person):
+def update_vehicle_speed(track_id, point):
+    if track_id not in vehicle_track_history:
+        vehicle_track_history[track_id] = deque(maxlen=VEHICLE_HISTORY_LEN)
+
+    vehicle_track_history[track_id].append(point)
+
+    points = vehicle_track_history[track_id]
+
+    if len(points) < 2:
+        return 0.0
+
+    x_old, y_old = points[0]
+    x_new, y_new = points[-1]
+
+    distance = ((x_new - x_old) ** 2 + (y_new - y_old) ** 2) ** 0.5
+    speed = distance / (len(points) - 1)
+
+    return speed
+
+
+def calculate_risk(red_stable, green_stable,
+                   moving_car_on_crosswalk,
+                   stopped_car_on_crosswalk,
+                   approaching_person):
     risk = 0
     causes = []
 
     signal_unknown = (not red_stable) and (not green_stable)
 
     if signal_unknown:
-        risk += 30
-        causes.append("Signal(not detected)")
+        risk += 25
+        causes.append("Signal(Not Detected)")
 
     if red_stable:
-        risk += 60
-        causes.append("signal(red light)")
+        risk += 70
+        causes.append("Signal(Red Light)")
 
-    if car_on_crosswalk:
-        risk += 60
-        causes.append("Car")
+    if moving_car_on_crosswalk:
+        risk += 70
+        causes.append("Moving Car")
+
+    elif stopped_car_on_crosswalk:
+        risk += 25
+        causes.append("Stopped Car")
 
     if approaching_person:
-        risk += 25
+        risk += 30
         causes.append("Person")
 
-    if risk >= 60:
+    if risk >= 70:
         status = "DANGER"
-    elif risk >= 20:
+    elif risk >= 25:
         status = "CAUTION"
     else:
         status = "SAFE"
@@ -172,7 +203,7 @@ def draw_status_panel(frame, status, risk_score, causes):
 
     cause_text = ", ".join(causes) if causes else "None"
 
-    panel_w = 260
+    panel_w = 330
     panel_h = 85
 
     panel_x = int((w - panel_w) / 2)
@@ -229,7 +260,7 @@ while True:
 
     annotated = frame.copy()
 
-    tracked_vehicle_boxes = []
+    tracked_vehicle_infos = []
     tracked_person_boxes = []
 
     exp4_crosswalk_boxes = []
@@ -266,16 +297,42 @@ while True:
 
     tracked = tracker.update_with_detections(detections)
 
+    active_vehicle_ids = set()
+
     for xyxy, cls, tid in zip(tracked.xyxy, tracked.class_id, tracked.tracker_id):
         x1, y1, x2, y2 = map(int, xyxy)
         cls = int(cls)
+        tid = int(tid)
 
         if cls == PERSON_CLASS:
             tracked_person_boxes.append((x1, y1, x2, y2))
             color = (255, 0, 255)
+
         elif cls in VEHICLE_CLASSES:
-            tracked_vehicle_boxes.append((x1, y1, x2, y2))
+            vehicle_box = (x1, y1, x2, y2)
+            vehicle_bottom_center = ((x1 + x2) / 2, y2)
+            vehicle_speed = update_vehicle_speed(tid, vehicle_bottom_center)
+
+            tracked_vehicle_infos.append({
+                "box": vehicle_box,
+                "track_id": tid,
+                "bottom_center": vehicle_bottom_center,
+                "speed": vehicle_speed
+            })
+
+            active_vehicle_ids.add(tid)
             color = (0, 255, 0)
+
+            cv2.putText(
+                annotated,
+                f"speed:{vehicle_speed:.1f}",
+                (x1, y2 + 18),
+                cv2.FONT_HERSHEY_SIMPLEX,
+                0.45,
+                color,
+                1
+            )
+
         else:
             color = (0, 255, 0)
 
@@ -289,6 +346,11 @@ while True:
             color,
             2
         )
+
+    # 오래 사라진 track history는 방치해도 큰 문제는 없지만, 간단히 현재 없는 ID는 유지하지 않음
+    for tid in list(vehicle_track_history.keys()):
+        if tid not in active_vehicle_ids:
+            vehicle_track_history.pop(tid, None)
 
     # =========================
     # 2. exp4: crosswalk + signal
@@ -390,22 +452,38 @@ while True:
         green_stable = True
 
     # =========================
-    # 6. Car on crosswalk
+    # 6. Car on crosswalk + moving/stopped decision
     # =========================
-    car_on_crosswalk_now = False
+    moving_car_on_crosswalk_now = False
+    stopped_car_on_crosswalk_now = False
 
     if last_crosswalk_box is not None:
-        for car_box in tracked_vehicle_boxes:
-            x1, y1, x2, y2 = car_box
+        for vehicle in tracked_vehicle_infos:
+            vehicle_bottom_center = vehicle["bottom_center"]
+            vehicle_speed = vehicle["speed"]
 
-            car_bottom_center = ((x1 + x2) / 2, y2)
+            if point_in_box(vehicle_bottom_center, last_crosswalk_box):
+                if vehicle_speed > MOVING_SPEED_THRESHOLD:
+                    moving_car_on_crosswalk_now = True
+                else:
+                    stopped_car_on_crosswalk_now = True
 
-            if point_in_box(car_bottom_center, last_crosswalk_box):
-                car_on_crosswalk_now = True
-                break
+    moving_car_history.append(moving_car_on_crosswalk_now)
+    stopped_car_history.append(stopped_car_on_crosswalk_now)
 
-    car_history.append(car_on_crosswalk_now)
-    car_on_crosswalk_stable = is_stable_bool(car_history, CAR_MIN_FRAMES)
+    moving_car_on_crosswalk_stable = is_stable_bool(
+        moving_car_history,
+        CAR_MIN_FRAMES
+    )
+
+    stopped_car_on_crosswalk_stable = is_stable_bool(
+        stopped_car_history,
+        CAR_MIN_FRAMES
+    )
+
+    # moving car가 우선
+    if moving_car_on_crosswalk_stable:
+        stopped_car_on_crosswalk_stable = False
 
     # =========================
     # 7. Approaching person
@@ -445,7 +523,8 @@ while True:
         new_status, new_risk_score, new_causes = calculate_risk(
             red_stable=red_stable,
             green_stable=green_stable,
-            car_on_crosswalk=car_on_crosswalk_stable,
+            moving_car_on_crosswalk=moving_car_on_crosswalk_stable,
+            stopped_car_on_crosswalk=stopped_car_on_crosswalk_stable,
             approaching_person=approaching_person_stable
         )
 
