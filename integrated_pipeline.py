@@ -4,9 +4,7 @@ import numpy as np
 import supervision as sv
 from collections import deque
 
-# =========================
-# Models
-# =========================
+# Load detection models
 coco_model = torch.hub.load('ultralytics/yolov5', 'yolov5s', pretrained=True)
 
 exp4_model = torch.hub.load(
@@ -21,9 +19,7 @@ exp124_model = torch.hub.load(
     path='runs/train/exp124/weights/best.pt'
 )
 
-# =========================
-# Tracker
-# =========================
+# Tracker setting
 tracker = sv.ByteTrack()
 
 PERSON_CLASS = 0
@@ -33,17 +29,13 @@ VALID_CLASSES = [PERSON_CLASS] + VEHICLE_CLASSES
 VIDEO_PATH = r"C:\project\crosswalk-traffic-light-detection-yolov5\videos\3.mp4"
 cap = cv2.VideoCapture(VIDEO_PATH)
 
-# =========================
-# Speed setting
-# =========================
+# Inference speed control
 FRAME_SKIP_CUSTOM = 3
 frame_count = 0
 last_exp4_results = []
 last_exp124_results = []
 
-# =========================
-# Temporal smoothing
-# =========================
+# Recent frame history
 HISTORY_LEN = 10
 CROSSWALK_MIN_FRAMES = 2
 SIGNAL_MIN_FRAMES = 2
@@ -57,7 +49,7 @@ moving_car_history = deque(maxlen=HISTORY_LEN)
 stopped_car_history = deque(maxlen=HISTORY_LEN)
 person_history = deque(maxlen=HISTORY_LEN)
 
-# vehicle speed tracking
+# Vehicle motion history
 vehicle_track_history = {}
 VEHICLE_HISTORY_LEN = 5
 MOVING_SPEED_THRESHOLD = 5.0  # pixel/frame
@@ -205,47 +197,19 @@ def draw_status_panel(frame, status, risk_score, causes):
 
     panel_w = 330
     panel_h = 85
-
     panel_x = int((w - panel_w) / 2)
     panel_y = int(h * 0.65)
 
-    cv2.rectangle(
-        frame,
-        (panel_x, panel_y),
-        (panel_x + panel_w, panel_y + panel_h),
-        (30, 30, 30),
-        -1
-    )
+    cv2.rectangle(frame, (panel_x, panel_y), (panel_x + panel_w, panel_y + panel_h), (30, 30, 30), -1)
 
-    cv2.putText(
-        frame,
-        status,
-        (panel_x + 15, panel_y + 24),
-        cv2.FONT_HERSHEY_SIMPLEX,
-        0.75,
-        color,
-        2
-    )
+    cv2.putText(frame, status, (panel_x + 15, panel_y + 24),
+                cv2.FONT_HERSHEY_SIMPLEX, 0.75, color, 2)
 
-    cv2.putText(
-        frame,
-        f"Risk: {risk_score}",
-        (panel_x + 15, panel_y + 50),
-        cv2.FONT_HERSHEY_SIMPLEX,
-        0.5,
-        (255, 255, 255),
-        1
-    )
+    cv2.putText(frame, f"Risk: {risk_score}", (panel_x + 15, panel_y + 50),
+                cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
 
-    cv2.putText(
-        frame,
-        f"Cause: {cause_text}",
-        (panel_x + 15, panel_y + 73),
-        cv2.FONT_HERSHEY_SIMPLEX,
-        0.45,
-        (255, 255, 255),
-        1
-    )
+    cv2.putText(frame, f"Cause: {cause_text}", (panel_x + 15, panel_y + 73),
+                cv2.FONT_HERSHEY_SIMPLEX, 0.45, (255, 255, 255), 1)
 
 
 print("video open =", cap.isOpened())
@@ -269,9 +233,7 @@ while True:
     red_detected = False
     green_detected = False
 
-    # =========================
-    # 1. COCO + ByteTrack
-    # =========================
+    # Detect vehicles and pedestrians
     with torch.no_grad():
         results = coco_model(frame)
 
@@ -286,7 +248,6 @@ while True:
 
     if len(detections_list) > 0:
         dets = np.array(detections_list)
-
         detections = sv.Detections(
             xyxy=dets[:, :4],
             confidence=dets[:, 4],
@@ -323,38 +284,22 @@ while True:
             active_vehicle_ids.add(tid)
             color = (0, 255, 0)
 
-            cv2.putText(
-                annotated,
-                f"speed:{vehicle_speed:.1f}",
-                (x1, y2 + 18),
-                cv2.FONT_HERSHEY_SIMPLEX,
-                0.45,
-                color,
-                1
-            )
+            cv2.putText(annotated, f"speed:{vehicle_speed:.1f}", (x1, y2 + 18),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.45, color, 1)
 
         else:
             color = (0, 255, 0)
 
         cv2.rectangle(annotated, (x1, y1), (x2, y2), color, 2)
-        cv2.putText(
-            annotated,
-            f"{coco_model.names[cls]} ID:{tid}",
-            (x1, y1 - 10),
-            cv2.FONT_HERSHEY_SIMPLEX,
-            0.5,
-            color,
-            2
-        )
+        cv2.putText(annotated, f"{coco_model.names[cls]} ID:{tid}", (x1, y1 - 10),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
 
-    # 오래 사라진 track history는 방치해도 큰 문제는 없지만, 간단히 현재 없는 ID는 유지하지 않음
+    # Clear inactive vehicle IDs
     for tid in list(vehicle_track_history.keys()):
         if tid not in active_vehicle_ids:
             vehicle_track_history.pop(tid, None)
 
-    # =========================
-    # 2. exp4: crosswalk + signal
-    # =========================
+    # Detect crosswalk and signal
     if run_custom_models:
         with torch.no_grad():
             exp4_results = exp4_model(frame)
@@ -383,19 +328,10 @@ while True:
             continue
 
         cv2.rectangle(annotated, (x1, y1), (x2, y2), color, 2)
-        cv2.putText(
-            annotated,
-            f"{label} {float(conf):.2f}",
-            (x1, y1 - 10),
-            cv2.FONT_HERSHEY_SIMPLEX,
-            0.6,
-            color,
-            2
-        )
+        cv2.putText(annotated, f"{label} {float(conf):.2f}", (x1, y1 - 10),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.6, color, 2)
 
-    # =========================
-    # 3. exp124: yellow crosswalk
-    # =========================
+    # Detect yellow crosswalk
     if run_custom_models:
         with torch.no_grad():
             exp124_results = exp124_model(frame)
@@ -406,19 +342,10 @@ while True:
         yellow_crosswalk_boxes.append((x1, y1, x2, y2))
 
         cv2.rectangle(annotated, (x1, y1), (x2, y2), (0, 255, 255), 2)
-        cv2.putText(
-            annotated,
-            f"Yellow Crosswalk {float(conf):.2f}",
-            (x1, y1 - 10),
-            cv2.FONT_HERSHEY_SIMPLEX,
-            0.6,
-            (0, 255, 255),
-            2
-        )
+        cv2.putText(annotated, f"Yellow Crosswalk {float(conf):.2f}", (x1, y1 - 10),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 255), 2)
 
-    # =========================
-    # 4. Crosswalk decision
-    # =========================
+    # Crosswalk state
     current_crosswalk_boxes = exp4_crosswalk_boxes + yellow_crosswalk_boxes
     current_crosswalk_box = select_largest_box(current_crosswalk_boxes)
 
@@ -435,9 +362,7 @@ while True:
         is_crosswalk_sufficient(last_crosswalk_box, frame.shape)
     )
 
-    # =========================
-    # 5. Signal decision
-    # =========================
+    # Signal state
     red_history.append(red_detected)
     green_history.append(green_detected)
 
@@ -451,9 +376,7 @@ while True:
         red_stable = False
         green_stable = True
 
-    # =========================
-    # 6. Car on crosswalk + moving/stopped decision
-    # =========================
+    # Vehicle risk
     moving_car_on_crosswalk_now = False
     stopped_car_on_crosswalk_now = False
 
@@ -471,36 +394,20 @@ while True:
     moving_car_history.append(moving_car_on_crosswalk_now)
     stopped_car_history.append(stopped_car_on_crosswalk_now)
 
-    moving_car_on_crosswalk_stable = is_stable_bool(
-        moving_car_history,
-        CAR_MIN_FRAMES
-    )
+    moving_car_on_crosswalk_stable = is_stable_bool(moving_car_history, CAR_MIN_FRAMES)
+    stopped_car_on_crosswalk_stable = is_stable_bool(stopped_car_history, CAR_MIN_FRAMES)
 
-    stopped_car_on_crosswalk_stable = is_stable_bool(
-        stopped_car_history,
-        CAR_MIN_FRAMES
-    )
-
-    # moving car가 우선
+    # Moving vehicle is more dangerous
     if moving_car_on_crosswalk_stable:
         stopped_car_on_crosswalk_stable = False
 
-    # =========================
-    # 7. Approaching person
-    # =========================
+    # Person risk
     roi_box = make_person_roi(frame.shape)
     rx1, ry1, rx2, ry2 = roi_box
 
     cv2.rectangle(annotated, (rx1, ry1), (rx2, ry2), (255, 255, 0), 2)
-    cv2.putText(
-        annotated,
-        "Person Risk ROI",
-        (rx1, ry1 - 10),
-        cv2.FONT_HERSHEY_SIMPLEX,
-        0.6,
-        (255, 255, 0),
-        2
-    )
+    cv2.putText(annotated, "Person Risk ROI", (rx1, ry1 - 10),
+                cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 0), 2)
 
     approaching_person_now = False
 
@@ -516,9 +423,7 @@ while True:
     person_history.append(approaching_person_now)
     approaching_person_stable = is_stable_bool(person_history, PERSON_MIN_FRAMES)
 
-    # =========================
-    # 8. Risk update
-    # =========================
+    # Final risk update
     if crosswalk_stable and crosswalk_visible_enough:
         new_status, new_risk_score, new_causes = calculate_risk(
             red_stable=red_stable,
@@ -536,12 +441,7 @@ while True:
         current_risk_score = 0
         current_causes = []
 
-    draw_status_panel(
-        annotated,
-        current_status,
-        current_risk_score,
-        current_causes
-    )
+    draw_status_panel(annotated, current_status, current_risk_score, current_causes)
 
     cv2.imshow("Integrated Pipeline + Risk Engine", annotated)
 
