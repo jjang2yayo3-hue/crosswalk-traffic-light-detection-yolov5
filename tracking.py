@@ -25,8 +25,6 @@ while True:
 
     results = model(frame)
 
-    print("검출 개수:", len(results.xyxy[0]))
-
     for *xyxy, conf, cls in results.xyxy[0]:
 
         x1, y1, x2, y2 = map(int, xyxy)

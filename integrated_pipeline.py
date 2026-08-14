@@ -26,6 +26,7 @@ PERSON_CLASS = 0
 VEHICLE_CLASSES = [2, 3, 5, 7]
 VALID_CLASSES = [PERSON_CLASS] + VEHICLE_CLASSES
 
+# you need to change the VIDEO_PATH to your own video path.
 VIDEO_PATH = r"C:\project\crosswalk-traffic-light-detection-yolov5\videos\3.mp4"
 cap = cv2.VideoCapture(VIDEO_PATH)
 
